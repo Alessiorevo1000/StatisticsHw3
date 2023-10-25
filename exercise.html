@@ -11,16 +11,16 @@
 <body>
     <h1>Homework 3</h1>
     <div>
-        <label for="prob">Insert the probability that attack succeeds:</label>
-        <input id="prob" placeholder="Insert a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
-    </div>
-    <div>
         <label for="systems">Insert the number of systems:</label>
         <input type="number"  id="systems" min="10" />
     </div>
     <div>
         <label for="numberAttacks">Insert the number of attacks to simulate:</label>
         <input type="number"  id="numberAttacks" min="10" />
+    </div>
+    <div>
+        <label for="prob">Insert the probability that attack success:</label>
+        <input id="prob" placeholder="Insert a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
     </div>
     <div>
         <button onclick="start()">START SIMULATION</button>
@@ -55,6 +55,71 @@
 
 
 <script>
+
+class Histogram {
+  constructor(lineChart, data, k) {
+    this.lineChart = lineChart;
+    this.data = data;
+    this.k = k;
+    this.DrawVerticalHistogram();
+  }
+
+  drawLine(ctx, x1, y1, x2, y2, stroke = 'black', width = 3) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = width;
+    ctx.stroke();
+  }
+
+  DrawVerticalHistogram() {
+    const { PADDING, _graphBitmap, yMin, yMax } = this.lineChart;
+    const lineChartPadding = PADDING;
+    const width = 500 - 2 * lineChartPadding;
+    const height = 500 - 2 * lineChartPadding;
+    const dist = this.computeDist(this.data);
+    const g = _graphBitmap.getContext('2d');
+
+    this.drawLine(g, lineChartPadding + width, lineChartPadding + height, lineChartPadding + width, lineChartPadding);
+
+    let numIntervallo = 0;
+    for (let i = yMin + (yMax - yMin) / this.k; i < yMax; i += (yMax - yMin) / this.k) {
+      // Numbers
+      let y = lineChartPadding + height - (i - yMin) * height / (yMax - yMin);
+      this.drawLine(g, lineChartPadding + width - 5, y, lineChartPadding + width + 5, y);
+      g.fillText(i.toString(), lineChartPadding + width + 5, y - 5);
+
+      // Draw K rectangles
+      let rect_len = (dist[numIntervallo] / Math.max(...dist)) * height;
+      let interval_len = height / this.k;
+      let x1 = lineChartPadding + width - rect_len;
+      let y1 = lineChartPadding + height - (i - yMin) * height / (yMax - yMin);
+      numIntervallo++;
+
+      g.fillRect(x1, y1, rect_len, interval_len);
+    }
+  }
+
+  computeDist(systemsFinalValues) {
+    const dist = Array(this.k).fill(0);
+    const lenInterval = (2 * this.lineChart.yMax) / this.k;
+    let j = this.lineChart.yMin;
+
+    for (let numIntervallo = 0; numIntervallo < this.k; numIntervallo++) {
+      for (let key in systemsFinalValues) {
+        if (systemsFinalValues[key] >= j && systemsFinalValues[key] < j + lenInterval) {
+          dist[numIntervallo]++;
+        }
+      }
+      j += lenInterval;
+    }
+    return dist;
+  }
+}
+
+
+
 
     //create a class to manage monitor 
 
