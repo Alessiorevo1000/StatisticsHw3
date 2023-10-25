@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="general.js"></script>
+ 
+    <script src="animated.js"></script>
+ 
+   
+</head>
+
+<body>
+    <h1>Homework 3</h1>
+    <div>
+        <label for="prob">Insert the probability that attack succeeds:</label>
+        <input id="prob" placeholder="Enter a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
+    </div>
+    <div>
+        <label for="systems">Insert the number of systems:</label>
+        <input type="number" placeholder="We suggest 100" id="systems" min="10" />
+    </div>
+    <div>
+        <label for="numberAttacks">Insert the number of attacks to simulate:</label>
+        <input type="number" placeholder="We suggest 30" id="numberAttacks" min="10" />
+    </div>
+    <div>
+        <button onclick="start()">START SIMULATION</button>
+    </div>
+    <canvas style="Border: 5px dashed rgb(255, 0, 0);" id="myCanvas" width="1850" height="3050"></canvas>
+
+    <script>
+        const frame = new DynamicObjManager("myCanvas");
+        const initialRectSize = { width: 1600, height: 610 };
+
+        function start() {
+            frame.clear();
+            frame.flushObjects();
+            const prob = parseFloat(document.getElementById("prob").value);
+            const systems = parseInt(document.getElementById("systems").value);
+            const numberAttacks = parseInt(document.getElementById("numberAttacks").value);
+            const graphSettings = { probability: prob, nSystems: systems, numberAttacks: numberAttacks };
+            const graphUISettings = { fill: "rgba(200, 200, 200, 0.5)", BorderGrid: "black", BorderGridWidth: 2 };
+            const attackMon = new MonitorAtt(graphSettings);
+            const Matrix = attackMon.getMatrix();
+            var gr1 = new graphStart(frame.canvas, { ...initialRectSize, x: 50, y: 20 }, { ...graphUISettings, label: "ATTACKS SUCCESS" }, { ...graphSettings, mode: "ATK" });
+            gr1.SettingsMatrix(Matrix);
+            var gr2 = new graphStart(frame.canvas, { ...initialRectSize, x: 50, y: 720 }, { ...graphUISettings, label: "ABSOLUTE FREQUENCY" }, { ...graphSettings, mode: "ABSOLUTE" });
+            gr2.SettingsMatrix(Matrix);
+            var gr3 = new graphStart(frame.canvas, { ...initialRectSize, x: 50, y: 1450 }, { ...graphUISettings, label: "RELATIVE FREQUENCY" }, { ...graphSettings, mode: "RELATIVE" });
+            gr3.SettingsMatrix(Matrix);
+            var gr4 = new graphStart(frame.canvas, { ...initialRectSize, x: 50, y: 2250 }, { ...graphUISettings, label: "NORMALIZED FREQUENCY" }, { ...graphSettings, mode: "NORMALIZE" });
+            gr4.SettingsMatrix(Matrix);
+            frame.addObjects([gr1, gr2, gr3, gr4]);
+        }
+    </script>
+
+
+<script>
+
+    //create a class to manage monitor 
+
+class MonitorAtt {
+    
+    constructor(Set) {
+        this.probability = Set.probability; 
+        this.numberAttacks = Set.numberAttacks;       
+        this.mode = Set.mode;            
+        this.nSystems = Set.nSystems;     
+        this.matrix = this.StartMatrixAttack();     
+    }
+
+
+    getMatrix() {
+        return this.matrix;
+    }
+
+
+
+
+    StartMatrixAttack() {
+        const matrix = [];    
+for (let i = 0; i < this.nSystems; i++) {
+    const row = [{ color: `#${(Math.random() * 0x1000000 | 0).toString(16)}`, final: 0, middle: 0 }];
+    for (let j = 0; j < this.numberAttacks; j++) {
+        row.push(Math.random() <= this.probability);
+    }
+    matrix.push(row);
+}
+        return matrix;
+    }
+
+}
+
+</script>
+
+
+
+<script>
+  
+
+class graphStart extends Rectangle {
+    constructor(canvasId, rectSize, uiSettings, graphSettings) {
+        super(canvasId, rectSize, uiSettings);
+        this.uiSettings = uiSettings;
+        this.probability = graphSettings.probability;
+        this.nAtk = graphSettings.numberAttacks;
+        this.mode = graphSettings.mode;
+        this.nSys = graphSettings.nSystems;
+    }
+
+    SettingsMatrix(attackMatrix) {
+        this.attackMatrix = attackMatrix;
+    }
+
+    generateGrid(numberOfColumns) {
+        this.buildUIHorizontal();
+        this.buildUIVerticalColumns(numberOfColumns);
+        this.BorderGrid();
+        if (this.uiSettings.label) {
+            this.LabelGrid(this.uiSettings.label);
+        }
+    }
+
+    BorderGrid() {
+        this.context.strokeStyle = "green";
+    }
+
+    LabelGrid(text) {
+        this.context.strokeStyle = "green";
+        this.context.fillText(text, this.rect.x, this.rect.y);
+    }
+
+    buildUIHorizontal() {
+ 
+        this.context.lineWidth = 1;
+        this.context.beginPath();
+        this.context.moveTo(this.rect.x, this.rect.y + this.rect.height / 2);
+        this.context.lineTo(this.rect.width + this.rect.x, this.rect.y + this.rect.height / 2);
+        this.context.stroke();
+    }
+
+    buildUIVerticalColumns(numberOfColumns) {
+        const spaceBetweenVerticals = this.rect.width / (numberOfColumns - 1);
+        for (let i = 1; i <= numberOfColumns; i++) {
+        
+            this.context.beginPath();
+            const x = this.rect.x + (i - 1) * spaceBetweenVerticals;
+            this.context.moveTo(x, this.rect.y);
+            this.context.lineTo(x, this.rect.height + this.rect.y);
+            this.context.stroke();
+            this.context.fillText(i, x, this.rect.height + this.rect.y);
+        }
+    }
+
+    realAttackCounter(array, index) {
+        if (index < 0 || index >= array.length) {
+            return -1; 
+        }
+
+        let count = 0;
+        for (let i = 0; i <= index; i++) {
+            if (array[i]) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    analyzeSystem(attackVector) {
+        let x = 0;
+        let score = 0;
+        this.context.strokeStyle = attackVector[0].color;
+        const numberOfAttacks = attackVector.length - 1;
+        const baseYaxis = this.rect.y + this.rect.height / 2;
+        let baseXaxis = this.rect.x;
+        let atkC = 0;
+
+        for (let i = attackVector.length; i > 0; i--) {
+            atkC++;
+            this.context.beginPath();
+
+            if (this.mode === "NORMALIZE") {
+                this.context.lineTo(baseXaxis + x, baseYaxis + (this.rect.height / 11 / numberOfAttacks) * -score);
+            } else {
+                this.context.moveTo(baseXaxis + x, baseYaxis + (this.rect.height / 5 / numberOfAttacks) * -score);
+            }
+
+            if (!attackVector[i]) {
+                if (this.mode === "ATK") {
+                    score--;
+                }
+            } else {
+                if (this.mode === "RELATIVE") {
+                    score += atkC / (attackVector.length - i);
+                } else if (this.mode === "NORMALIZE") {
+                    score += atkC / Math.sqrt(this.realAttackCounter(attackVector, attackVector.length - i));
+                } else {
+                    score++;
+                }
+            }
+
+            x = (attackVector.length - i) * (this.rect.width / numberOfAttacks);
+
+            if (this.mode === "NORMALIZE") {
+                this.context.lineTo(baseXaxis + x, baseYaxis + (this.rect.height / 11 / numberOfAttacks) * (-score));
+            } else {
+                this.context.lineTo(baseXaxis + x, baseYaxis + (this.rect.height / 5 / numberOfAttacks) * (-score));
+            }
+
+            this.context.stroke();
+
+            if (Math.floor(numberOfAttacks / 2) == i) {
+                attackVector[0].middle = score;
+            }
+        }
+
+        attackVector[0].final = score;
+    }
+    __printHistogram(scores, color, startingPoint, numberOfAttacks, rect) {
+        const minScore = Math.min(...scores);
+        const maxScore = Math.max(...scores);
+        const numIntervals = Math.max(Math.ceil(numberOfAttacks / 10), 5);
+        const intervalWidth = (maxScore - minScore) / numIntervals;
+
+        const intervalCounts = new Array(numIntervals).fill(0);
+        scores.forEach(score => {
+            const intervalIndex = Math.min(Math.floor((score - minScore) / intervalWidth), numIntervals - 1);
+            intervalCounts[intervalIndex]++;
+        });
+        const maxCount = Math.max(...intervalCounts);
+
+        const barUIWidth = rect.height / numIntervals;
+        const barHeightFactor = rect.width / 5;
+
+        for (let i = 0; i < numIntervals; i++) {
+            const y = rect.y + i * barUIWidth;
+            const barUIHeight = (intervalCounts[i] / maxCount) * barHeightFactor;
+            const baseX = rect.x + startingPoint - barUIHeight;
+
+            this.context.fillStyle = color;
+            this.context.strokeStyle = "black";
+            this.context.fillRect(baseX, y, barUIHeight, barUIWidth);
+        }
+
+    }
+
+  
+    createHistogram() {
+        this.context.globalAlpha = 0.5;
+        const scoreFinals = this.attackMatrix.map(system => system[0]['final']);
+        const scoreMiddle = this.attackMatrix.map(system => system[0]['middle']);
+        this.__printHistogram(scoreMiddle, "lightblue", this.rect.width / 2, this.attackMatrix.length, this.rect);
+        this.__printHistogram(scoreFinals, "magenta", this.rect.width, this.attackMatrix.length, this.rect);
+        this.context.globalAlpha = 1;
+    }
+
+    drawInside() {
+        this.draw();
+        this.generateGrid(this.nAtk)
+        for (let i = 0; i < this.attackMatrix.length; i++) {
+            this.analyzeSystem(this.attackMatrix[i]);
+        }
+        this.createHistogram()
+    }
+
+    flip() {
+        this.isFlipped = !this.isFlipped;
+        this.drawInside();
+    }
+}
+
+</script>
+</body>
+
+</html>
