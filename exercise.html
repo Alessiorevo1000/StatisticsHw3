@@ -3,8 +3,7 @@
 
 <head>
     <script src="general.js"></script>
- 
-    <script src="animated.js"></script>
+
  
    
 </head>
@@ -13,15 +12,15 @@
     <h1>Homework 3</h1>
     <div>
         <label for="prob">Insert the probability that attack succeeds:</label>
-        <input id="prob" placeholder="Enter a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
+        <input id="prob" placeholder="Insert a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
     </div>
     <div>
         <label for="systems">Insert the number of systems:</label>
-        <input type="number" placeholder="We suggest 100" id="systems" min="10" />
+        <input type="number"  id="systems" min="10" />
     </div>
     <div>
         <label for="numberAttacks">Insert the number of attacks to simulate:</label>
-        <input type="number" placeholder="We suggest 30" id="numberAttacks" min="10" />
+        <input type="number"  id="numberAttacks" min="10" />
     </div>
     <div>
         <button onclick="start()">START SIMULATION</button>
