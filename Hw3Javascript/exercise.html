@@ -19,8 +19,8 @@
         <input type="number"  id="numberAttacks" min="10" />
     </div>
     <div>
-        <label for="prob">Insert the probability that attack success:</label>
-        <input id="prob" placeholder="Insert a value between 0 and 1" step=".01" type="number" min="0" max="1" style="width: 200px;" >
+        <label for="prob">Insert the LAMBDA value:</label>
+        <input id="prob" placeholder="Insert a value between 0 and 1" step=".01" type="number" min="0"  style="width: 200px;" >
     </div>
     <div>
         <button onclick="start()">START SIMULATION</button>
@@ -34,9 +34,13 @@
         function start() {
             frame.clear();
             frame.flushObjects();
-            const prob = parseFloat(document.getElementById("prob").value);
+            
             const systems = parseInt(document.getElementById("systems").value);
             const numberAttacks = parseInt(document.getElementById("numberAttacks").value);
+
+            const pro = parseFloat(document.getElementById("prob").value)  ;
+            const T= 1
+            const prob = pro *(T/numberAttacks);
             const graphSettings = { probability: prob, nSystems: systems, numberAttacks: numberAttacks };
             const graphUISettings = { fill: "rgba(200, 200, 200, 0.5)", BorderGrid: "black", BorderGridWidth: 2 };
             const attackMon = new MonitorAtt(graphSettings);
